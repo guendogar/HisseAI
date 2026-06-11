@@ -1,4 +1,19 @@
 {
-  "name": "HisseAI",
-  "displayName": "HisseAI"
+  "expo": {
+    "name": "HisseAI",
+    "slug": "HisseAI",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hisseai.app"
+    },
+    "android": {
+      "package": "com.hisseai.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
 }
