@@ -5,7 +5,7 @@
 import { AuthTokens, User } from '../../types';
 import { MOCK_USER, MOCK_TOKENS } from './mockData';
 
-const USE_MOCK_AUTH = true; // Backend hazır olunca false yapın
+const USE_MOCK_AUTH = false; // Backend hazır olunca false yapın
 const AUTH_TIMEOUT_MS = 5000; // 5 saniye timeout
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {

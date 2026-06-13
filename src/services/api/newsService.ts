@@ -2,7 +2,7 @@ import { NewsArticle } from '../../types';
 import { cache, CacheKeys, CacheTTL } from '../cache';
 import { MOCK_NEWS } from './mockData';
 
-const USE_MOCK = true; // Backend hazır olunca false yapın
+const USE_MOCK = false; // Backend hazır olunca false yapın
 
 // ─── Sentiment ───────────────────────────────────────────────────────────────
 

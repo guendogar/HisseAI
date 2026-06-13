@@ -6,7 +6,7 @@ import { Market } from '../../constants';
 import { cache, CacheKeys, CacheTTL } from '../cache';
 import { MOCK_STOCKS, generateMockHistory } from './mockData';
 
-const USE_MOCK = true; // Backend hazır olunca false yapın
+const USE_MOCK = false; // Backend hazır olunca false yapın
 
 // ─── Mock Helpers ─────────────────────────────────────────────────────────────
 

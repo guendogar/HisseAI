@@ -5,7 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../constants';
 
-const USE_MOCK = true; // Backend hazır olunca false yapın
+const USE_MOCK = false; // Backend hazır olunca false yapın
 
 export const syncService = {
   async pushData(): Promise<void> {
