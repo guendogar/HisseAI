@@ -101,4 +101,4 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleye
 
 ---
 
-*Değerlendirme Notu: Sayın Hocam, projeyi yukarıdaki adımları takip ederek kendi ortamınızda (simülatör veya fiziksel cihaz) test edebilirsiniz. Projenin mimarisine ve işleyişine dair detaylı raporlar ile ek dokümantasyonlar ayrıca teslim edilecektir. İncelemeniz ve değerli vaktiniz için teşekkür ederim.*
+*Değerlendirme Notu: Sayın Hocam, projeyi yukarıdaki adımları takip ederek kendi ortamınızda (simülatör veya fiziksel cihaz) test edebilirsiniz. İncelemeniz ve değerli vaktiniz için teşekkür ederim.*
