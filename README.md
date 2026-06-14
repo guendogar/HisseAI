@@ -1,97 +1,93 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# HisseAI (AI-Powered Stock Market Analysis)
 
-# Getting Started
+HisseAI, borsa takip işlemlerini yapay zeka destekli tahminlerle birleştiren, kullanıcı dostu ve modern bir mobil uygulamadır. Gerçek zamanlı haber takibi, hisse senedi tahminleri ve güvenli kullanıcı yönetimi özellikleri ile yatırımcılara rehberlik etmeyi hedefler.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🚀 Özellikler
 
-## Step 1: Start Metro
+- **Güvenli Kimlik Doğrulama**: Kullanıcı kayıt ve giriş işlemleri (Supabase üzerinden sağlanır).
+- **Gerçek Zamanlı Haberler**: Finans dünyasından en güncel haberler ve gelişmeler.
+- **Yapay Zeka Destekli Tahminler**: Seçili hisse senetleri için geleceğe yönelik yapay zeka analizleri ve fiyat tahminleri.
+- **Portföy ve Ana Ekran**: Kullanıcının hisselerini kolayca takip edebileceği modern ana ekran tasarımı.
+- **Özelleştirilebilir Ayarlar**: Kullanıcı profili ve uygulama içi ayar seçenekleri.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 🛠 Kullanılan Teknolojiler
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Frontend**: React Native (Cross-platform mobil uygulama)
+- **Backend & Veritabanı**: Supabase (PostgreSQL, Authentication)
+- **Dağıtım ve Sunucu**: Render
+- **Sürüm Kontrolü**: Git & GitHub
 
-```sh
-# Using npm
-npm start
+## 📱 Ekran Görüntüleri
 
-# OR using Yarn
-yarn start
-```
+### Kullanıcı Arayüzü (Mobil Uygulama)
 
-## Step 2: Build and run your app
+| Giriş Ekranı | Kayıt Ol Ekranı | Ana Ekran |
+|:---:|:---:|:---:|
+| <img src="screenshots/giris.jpg" width="250" /> | <img src="screenshots/kayitol.jpg" width="250" /> | <img src="screenshots/anaekran.jpg" width="250" /> |
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+| Haberler Ekranı | Yapay Zeka Tahmin | Ayarlar Ekranı |
+|:---:|:---:|:---:|
+| <img src="screenshots/haberler.jpg" width="250" /> | <img src="screenshots/yz_tahmin.jpg" width="250" /> | <img src="screenshots/ayarlar.jpg" width="250" /> |
 
-### Android
+### Altyapı ve Backend
 
-```sh
-# Using npm
-npm run android
+**Supabase Veritabanı ve Yönetim**
+| Supabase Genel Bakış | Supabase Tabloları |
+|:---:|:---:|
+| ![Supabase](screenshots/supabase.png) | ![Supabase Tablo](screenshots/supabase_table.png) |
 
-# OR using Yarn
-yarn android
-```
+**Dağıtım ve Sürüm Kontrolü (Render & Git)**
+| Git Backend | Render Dağıtımı | Render Projesi |
+|:---:|:---:|:---:|
+| ![Git](screenshots/git_backend.png) | ![Render](screenshots/render.png) | ![Render Project](screenshots/render_project.png) |
 
-### iOS
+## ⚙️ Kurulum ve Çalıştırma
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+### Gereksinimler
+- Node.js (Güncel bir LTS sürümü)
+- React Native CLI veya Expo CLI (Proje yapısına göre)
+- Android Studio / Xcode (Simülatör için)
 
-```sh
-bundle install
-```
+### Adımlar
 
-Then, and every time you update your native dependencies, run:
+1. **Projeyi Klonlayın**
+   ```bash
+   git clone <github-repo-url>
+   cd HisseAI
+   ```
 
-```sh
-bundle exec pod install
-```
+2. **Bağımlılıkları Yükleyin**
+   ```bash
+   npm install
+   # veya
+   yarn install
+   ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+3. **Çevresel Değişkenleri Ayarlayın**
+   Kök dizinde bir `.env` dosyası oluşturun ve gerekli Supabase / API anahtarlarını ekleyin:
+   ```env
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-```sh
-# Using npm
-npm run ios
+4. **Uygulamayı Başlatın**
 
-# OR using Yarn
-yarn ios
-```
+   *Android için:*
+   ```bash
+   npm run android
+   # veya
+   yarn android
+   ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+   *iOS için:*
+   ```bash
+   cd ios && pod install && cd ..
+   npm run ios
+   # veya
+   yarn ios
+   ```
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+*Not: Bu README dosyası proje yapısına göre düzenlenebilir. Eksik olan kurulum linklerini ve detaylı API dokümantasyonunu projenin gelişim sürecinde bu alana ekleyebilirsiniz.*
