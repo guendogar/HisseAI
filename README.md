@@ -71,7 +71,21 @@ Borsa takibi yapmak, karmaşık grafikler ve düzensiz haber akışları arasın
 
 ---
 
-## 🏗️ Altyapı ve Backend
+## 🏗️ Mimari ve Altyapı
+
+HisseAI, ölçeklenebilir ve kolay yönetilebilir bir **katmanlı / modüler mimari** kullanılarak geliştirilmiştir. Projenin klasör hiyerarşisi, her bileşenin kendi sorumluluğuna (separation of concerns) sahip olmasını sağlar:
+
+- `src/components`: Uygulama genelinde tekrar kullanılabilir UI bileşenleri (özel butonlar, hisse kartları, grafikler).
+- `src/screens`: Kullanıcının etkileşime girdiği ana uygulama ekranları (Ana Sayfa, Haberler, Tahminler, Profil).
+- `src/navigation`: React Navigation ile yapılandırılmış sekme (tab) ve yığın (stack) yönlendirmeleri.
+- `src/services`: Supabase veritabanı işlemleri, piyasa verileri ve yapay zeka tahmin algoritmaları için dış API entegrasyonları.
+- `src/store`: Uygulama içi global durum yönetimi (State Management).
+- `src/theme`: Uygulamanın renk paleti, tipografisi ve tasarım sisteminin merkezi yapılandırması.
+- `src/utils` & `src/types`: TypeScript arayüzleri, veri tipleri ve yardımcı (helper) fonksiyonlar.
+
+---
+
+### Backend, Veritabanı ve Dağıtım
 
 **Değerli Hocamızın Dikkatine,**
 
