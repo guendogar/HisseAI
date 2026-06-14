@@ -17,6 +17,10 @@ HisseAI, borsa takip işlemlerini yapay zeka destekli tahminlerle birleştiren, 
 - **Dağıtım ve Sunucu**: Render
 - **Sürüm Kontrolü**: Git & GitHub
 
+## 🔒 Güvenlik ve Backend Erişimi
+
+**Önemli Bilgilendirme (Hocamızın Dikkatine):** Projenin backend tarafı, veritabanı konfigürasyonları ve sunucu dosyaları, içerdikleri hassas veriler (şifreler, API anahtarları, güvenlik token'ları vb.) nedeniyle herkese açık (public) olarak paylaşılmamıştır. Public yapılması halinde bu gizli bilgiler herkes tarafından görülebileceğinden güvenlik zafiyeti oluşturmaktadır. Bu repoda uygulamanın mobil/istemci (client) kodları yer almaktadır. Backend altyapısına dair mimari ve veritabanı yapılarını aşağıdaki ekran görüntüleri bölümünden inceleyebilirsiniz.
+
 ## 📱 Ekran Görüntüleri
 
 ### Kullanıcı Arayüzü (Mobil Uygulama)
