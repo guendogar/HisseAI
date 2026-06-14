@@ -100,4 +100,5 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleye
    ```
 
 ---
-*Not: Bu README dosyası proje yapısına göre düzenlenebilir. Eksik olan kurulum linklerini ve detaylı API dokümantasyonunu projenin gelişim sürecinde bu alana ekleyebilirsiniz.*
+
+*Değerlendirme Notu: Sayın Hocam, projeyi yukarıdaki adımları takip ederek kendi ortamınızda (simülatör veya fiziksel cihaz) test edebilirsiniz. Projenin mimarisine ve işleyişine dair detaylı raporlar ile ek dokümantasyonlar ayrıca teslim edilecektir. İncelemeniz ve değerli vaktiniz için teşekkür ederim.*
