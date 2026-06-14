@@ -1,89 +1,93 @@
-// ─── Stock Service (Mock Mode) ────────────────────────────────────────────────
-// USE_MOCK = true olduğunda tüm API çağrıları mock verilerle karşılanır.
+// ─── Stock Service – Direkt Yahoo Finance API ─────────────────────────────────
+// Backend'e gerek yok. React Native'de CORS olmadığı için direkt çekiyoruz.
 
 import { Stock, StockPrice, StockHistory } from '../../types';
 import { Market } from '../../constants';
 import { cache, CacheKeys, CacheTTL } from '../cache';
-import { MOCK_STOCKS, generateMockHistory } from './mockData';
 
-const USE_MOCK = false; // Backend hazır olunca false yapın
+const YF_BASE = 'https://query1.finance.yahoo.com';
+const YF_BASE2 = 'https://query2.finance.yahoo.com';
 
-// ─── Mock Helpers ─────────────────────────────────────────────────────────────
+// ─── Sembol Listeleri ─────────────────────────────────────────────────────────
 
-function mockGetStocksByMarket(market: Market): Stock[] {
-  return MOCK_STOCKS.filter(s => s.market === market);
+const MARKET_SYMBOLS: Record<string, string[]> = {
+  BIST: [
+    'THYAO.IS', 'GARAN.IS', 'EREGL.IS', 'AKBNK.IS', 'KCHOL.IS',
+    'SASA.IS', 'TUPRS.IS', 'SAHOL.IS', 'BIMAS.IS', 'VESTL.IS',
+    'ASELS.IS', 'TCELL.IS', 'YKBNK.IS', 'PGSUS.IS', 'SISE.IS',
+  ],
+  NASDAQ: [
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'NFLX', 'AMD', 'INTC',
+  ],
+  NYSE: [
+    'JPM', 'BAC', 'GS', 'WMT', 'XOM', 'CVX', 'PFE', 'KO', 'DIS', 'GE',
+  ],
+  EUROPE: [
+    'SAP.DE', 'SIE.DE', 'BMW.DE', 'VOW3.DE', 'DTE.DE',
+  ],
+};
+
+// ─── Yardımcı Fonksiyonlar ────────────────────────────────────────────────────
+
+function marketOf(symbol: string): Market {
+  if (symbol.endsWith('.IS')) return 'BIST';
+  if (symbol.endsWith('.DE') || symbol.endsWith('.PA') || symbol.endsWith('.L')) return 'EUROPE';
+  if (MARKET_SYMBOLS.NYSE.includes(symbol)) return 'NYSE';
+  return 'NASDAQ';
 }
 
-function mockSearchStocks(query: string, market?: Market): Stock[] {
-  const q = query.toLowerCase();
-  return MOCK_STOCKS.filter(s =>
-    (s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) &&
-    (!market || s.market === market),
-  );
+function mapPrice(q: any): StockPrice {
+  return {
+    current: q.regularMarketPrice ?? 0,
+    open: q.regularMarketOpen ?? 0,
+    high: q.regularMarketDayHigh ?? 0,
+    low: q.regularMarketDayLow ?? 0,
+    close: q.regularMarketPrice ?? 0,
+    previousClose: q.regularMarketPreviousClose ?? 0,
+    changeAmount: q.regularMarketChange ?? 0,
+    changePercent: q.regularMarketChangePercent ?? 0,
+    volume: q.regularMarketVolume ?? 0,
+    avgVolume: q.averageDailyVolume3Month ?? 0,
+    marketCap: q.marketCap ?? 0,
+    timestamp: q.regularMarketTime ? q.regularMarketTime * 1000 : Date.now(),
+  };
 }
 
-function mockGetStocksByMarketAndSector(market: Market, sector: string): Stock[] {
-  return MOCK_STOCKS.filter(s => s.market === market && s.sector?.toLowerCase() === sector.toLowerCase());
+function mapStock(q: any): Stock {
+  return {
+    id: q.symbol,
+    symbol: q.symbol,
+    name: q.shortName || q.longName || q.symbol,
+    market: marketOf(q.symbol),
+    currency: q.currency || (q.symbol.endsWith('.IS') ? 'TRY' : 'USD'),
+    sector: q.sector,
+    price: mapPrice(q),
+  };
 }
 
-function mockGetStocksBySector(sector: string): Stock[] {
-  return MOCK_STOCKS.filter(s => s.sector?.toLowerCase() === sector.toLowerCase());
-}
-
-function mockGetAllSectors(market?: Market): string[] {
-  const stocks = market ? MOCK_STOCKS.filter(s => s.market === market) : MOCK_STOCKS;
-  const sectors = new Set<string>();
-  stocks.forEach(s => {
-    if (s.sector) sectors.add(s.sector);
-  });
-  return Array.from(sectors).sort();
-}
-
-function mockGetStockById(id: string): Stock {
-  const found = MOCK_STOCKS.find(s => s.id === id);
-  if (!found) throw new Error(`Hisse bulunamadı: ${id}`);
-  return found;
-}
-
-function mockGetPrice(symbol: string): StockPrice {
-  const stock = MOCK_STOCKS.find(s => s.symbol === symbol);
-  if (!stock?.price) throw new Error(`Fiyat bulunamadı: ${symbol}`);
-  return stock.price;
-}
-
-function mockGetBatchPrices(symbols: string[]): Record<string, StockPrice> {
-  const result: Record<string, StockPrice> = {};
-  for (const sym of symbols) {
-    const stock = MOCK_STOCKS.find(s => s.symbol === sym);
-    if (stock?.price) result[sym] = stock.price;
+async function fetchQuotes(symbols: string[]): Promise<Stock[]> {
+  if (!symbols.length) return [];
+  try {
+    const url = `${YF_BASE}/v8/finance/quote?symbols=${symbols.join(',')}&lang=tr&region=TR`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    if (!res.ok) throw new Error('Yahoo Finance yanıt vermedi');
+    const json = await res.json();
+    const quotes: any[] = json?.quoteResponse?.result ?? [];
+    return quotes.map(mapStock);
+  } catch {
+    // İlk sunucu başarısızsa ikincisini dene
+    try {
+      const url2 = `${YF_BASE2}/v8/finance/quote?symbols=${symbols.join(',')}&lang=tr&region=TR`;
+      const res = await fetch(url2, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const json = await res.json();
+      const quotes: any[] = json?.quoteResponse?.result ?? [];
+      return quotes.map(mapStock);
+    } catch {
+      return [];
+    }
   }
-  return result;
-}
-
-function mockGetHistory(symbol: string): StockHistory[] {
-  const stock = MOCK_STOCKS.find(s => s.symbol === symbol);
-  const base = stock?.price?.current ?? 100;
-  return generateMockHistory(base, 365);
-}
-
-function mockGetMovers(sort: 'gain' | 'loss' | 'volume', market?: Market, limit = 10): Stock[] {
-  let list = market ? MOCK_STOCKS.filter(s => s.market === market) : [...MOCK_STOCKS];
-  list = list.sort((a, b) => {
-    if (sort === 'gain') return (b.price?.changePercent ?? 0) - (a.price?.changePercent ?? 0);
-    if (sort === 'loss') return (a.price?.changePercent ?? 0) - (b.price?.changePercent ?? 0);
-    return (b.price?.volume ?? 0) - (a.price?.volume ?? 0);
-  });
-  return list.slice(0, limit);
-}
-
-// ─── Async wrapper (simulates network delay) ──────────────────────────────────
-
-function mockAsync<T>(fn: () => T, delayMs = 300): Promise<T> {
-  return new Promise((resolve, reject) =>
-    setTimeout(() => {
-      try { resolve(fn()); } catch (e) { reject(e); }
-    }, delayMs),
-  );
 }
 
 // ─── Public Service ───────────────────────────────────────────────────────────
@@ -93,11 +97,8 @@ export const stockService = {
     const key = CacheKeys.stockList('ALL');
     const cached = cache.get<Stock[]>(key);
     if (cached) return cached;
-
-    const data = USE_MOCK
-      ? await mockAsync(() => [...MOCK_STOCKS])
-      : await (await import('./client')).apiClient.get<Stock[]>('/stocks');
-
+    const all = Object.values(MARKET_SYMBOLS).flat();
+    const data = await fetchQuotes(all);
     cache.set(key, data, CacheTTL.history);
     return data;
   },
@@ -106,31 +107,35 @@ export const stockService = {
     const key = CacheKeys.stockList(market);
     const cached = cache.get<Stock[]>(key);
     if (cached) return cached;
-
-    const data = USE_MOCK
-      ? await mockAsync(() => mockGetStocksByMarket(market))
-      : await (await import('./client')).apiClient.get<Stock[]>(`/stocks?market=${market}`);
-
-    cache.set(key, data, CacheTTL.history);
+    const symbols = MARKET_SYMBOLS[market] ?? [];
+    const data = await fetchQuotes(symbols);
+    cache.set(key, data, CacheTTL.prices);
     return data;
   },
 
   async searchStocks(query: string, market?: Market): Promise<Stock[]> {
-    if (USE_MOCK) return mockAsync(() => mockSearchStocks(query, market));
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams({ q: query });
-    if (market) params.set('market', market);
-    return apiClient.get<Stock[]>(`/stocks/search?${params.toString()}`);
+    try {
+      const url = `${YF_BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15&newsCount=0&lang=tr`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const json = await res.json();
+      const hits: any[] = json?.finance?.result?.[0]?.quotes ?? json?.quotes ?? [];
+      const symbols = hits
+        .filter((h: any) => h.quoteType === 'EQUITY')
+        .map((h: any) => h.symbol)
+        .slice(0, 10);
+      if (!symbols.length) return [];
+      const stocks = await fetchQuotes(symbols);
+      return market ? stocks.filter(s => s.market === market) : stocks;
+    } catch {
+      return [];
+    }
   },
 
   async getStockById(id: string): Promise<Stock> {
     const cached = cache.get<Stock>(`stock:${id}`);
     if (cached) return cached;
-
-    const data = USE_MOCK
-      ? await mockAsync(() => mockGetStockById(id))
-      : await (await import('./client')).apiClient.get<Stock>(`/stocks/${id}`);
-
+    const [data] = await fetchQuotes([id]);
+    if (!data) throw new Error(`Hisse bulunamadı: ${id}`);
     cache.set(`stock:${id}`, data, CacheTTL.prices);
     return data;
   },
@@ -139,19 +144,17 @@ export const stockService = {
     const key = CacheKeys.stockPrice(symbol);
     const cached = cache.get<StockPrice>(key);
     if (cached) return cached;
-
-    const data = USE_MOCK
-      ? await mockAsync(() => mockGetPrice(symbol))
-      : await (await import('./client')).apiClient.get<StockPrice>(`/stocks/${symbol}/price`);
-
-    cache.set(key, data, CacheTTL.prices);
-    return data;
+    const [stock] = await fetchQuotes([symbol]);
+    if (!stock?.price) throw new Error(`Fiyat bulunamadı: ${symbol}`);
+    cache.set(key, stock.price, CacheTTL.prices);
+    return stock.price;
   },
 
   async getBatchPrices(symbols: string[]): Promise<Record<string, StockPrice>> {
-    if (USE_MOCK) return mockAsync(() => mockGetBatchPrices(symbols));
-    const { apiClient } = await import('./client');
-    return apiClient.get<Record<string, StockPrice>>(`/stocks/prices/batch?symbols=${symbols.join(',')}`);
+    const stocks = await fetchQuotes(symbols);
+    const result: Record<string, StockPrice> = {};
+    stocks.forEach(s => { if (s.price) result[s.symbol] = s.price; });
+    return result;
   },
 
   async getHistory(
@@ -163,59 +166,73 @@ export const stockService = {
     const cached = cache.get<StockHistory[]>(key);
     if (cached) return cached;
 
-    const data = USE_MOCK
-      ? await mockAsync(() => mockGetHistory(symbol), 200)
-      : await (await import('./client')).apiClient.get<StockHistory[]>(
-          `/stocks/${symbol}/history?period=${period}&interval=${interval}`,
-        );
+    const rangeMap: Record<string, string> = {
+      '1D': '1d', '1W': '5d', '1M': '1mo', '1Y': '1y', 'ALL': '5y',
+    };
+    const intervalMap: Record<string, string> = {
+      '1D': '5m', '1W': '15m', '1M': '1d', '1Y': '1d', 'ALL': '1wk',
+    };
 
-    cache.set(key, data, CacheTTL.history);
-    return data;
+    const range = rangeMap[period] ?? '1mo';
+    const yfInterval = intervalMap[period] ?? '1d';
+
+    try {
+      const url = `${YF_BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${yfInterval}&range=${range}`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const json = await res.json();
+      const chart = json?.chart?.result?.[0];
+      if (!chart) return [];
+
+      const timestamps: number[] = chart.timestamp ?? [];
+      const ohlcv = chart.indicators?.quote?.[0] ?? {};
+
+      const history: StockHistory[] = timestamps.map((ts: number, i: number) => ({
+        date: new Date(ts * 1000).toISOString(),
+        open: ohlcv.open?.[i] ?? 0,
+        high: ohlcv.high?.[i] ?? 0,
+        low: ohlcv.low?.[i] ?? 0,
+        close: ohlcv.close?.[i] ?? 0,
+        volume: ohlcv.volume?.[i] ?? 0,
+      })).filter(h => h.close > 0);
+
+      cache.set(key, history, CacheTTL.history);
+      return history;
+    } catch {
+      return [];
+    }
   },
 
   async getTopGainers(market?: Market, limit = 10): Promise<Stock[]> {
-    if (USE_MOCK) return mockAsync(() => mockGetMovers('gain', market, limit));
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams({ sort: 'change_desc', limit: String(limit) });
-    if (market) params.set('market', market);
-    return apiClient.get<Stock[]>(`/stocks/movers/gainers?${params.toString()}`);
+    const symbols = market ? (MARKET_SYMBOLS[market] ?? []) : Object.values(MARKET_SYMBOLS).flat();
+    const stocks = await fetchQuotes(symbols);
+    return stocks.sort((a, b) => (b.price?.changePercent ?? 0) - (a.price?.changePercent ?? 0)).slice(0, limit);
   },
 
   async getTopLosers(market?: Market, limit = 10): Promise<Stock[]> {
-    if (USE_MOCK) return mockAsync(() => mockGetMovers('loss', market, limit));
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams({ sort: 'change_asc', limit: String(limit) });
-    if (market) params.set('market', market);
-    return apiClient.get<Stock[]>(`/stocks/movers/losers?${params.toString()}`);
+    const symbols = market ? (MARKET_SYMBOLS[market] ?? []) : Object.values(MARKET_SYMBOLS).flat();
+    const stocks = await fetchQuotes(symbols);
+    return stocks.sort((a, b) => (a.price?.changePercent ?? 0) - (b.price?.changePercent ?? 0)).slice(0, limit);
   },
 
   async getMostActive(market?: Market, limit = 10): Promise<Stock[]> {
-    if (USE_MOCK) return mockAsync(() => mockGetMovers('volume', market, limit));
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams({ sort: 'volume_desc', limit: String(limit) });
-    if (market) params.set('market', market);
-    return apiClient.get<Stock[]>(`/stocks/movers/active?${params.toString()}`);
+    const symbols = market ? (MARKET_SYMBOLS[market] ?? []) : Object.values(MARKET_SYMBOLS).flat();
+    const stocks = await fetchQuotes(symbols);
+    return stocks.sort((a, b) => (b.price?.volume ?? 0) - (a.price?.volume ?? 0)).slice(0, limit);
   },
 
   async getStocksBySector(sector: string, market?: Market): Promise<Stock[]> {
-    if (USE_MOCK) {
-      return mockAsync(() =>
-        market
-          ? mockGetStocksByMarketAndSector(market, sector)
-          : mockGetStocksBySector(sector),
-      );
-    }
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams({ sector });
-    if (market) params.set('market', market);
-    return apiClient.get<Stock[]>(`/stocks/by-sector?${params.toString()}`);
+    const all = await this.getAllStocks();
+    return all.filter(s =>
+      s.sector?.toLowerCase() === sector.toLowerCase() &&
+      (!market || s.market === market),
+    );
   },
 
   async getAllSectors(market?: Market): Promise<string[]> {
-    if (USE_MOCK) return mockAsync(() => mockGetAllSectors(market));
-    const { apiClient } = await import('./client');
-    const params = new URLSearchParams();
-    if (market) params.set('market', market);
-    return apiClient.get<string[]>(`/stocks/sectors?${params.toString()}`);
+    const all = await this.getAllStocks();
+    const sectors = new Set<string>();
+    all.filter(s => !market || s.market === market)
+      .forEach(s => { if (s.sector) sectors.add(s.sector); });
+    return Array.from(sectors).sort();
   },
 };
