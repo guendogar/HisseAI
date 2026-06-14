@@ -1,64 +1,103 @@
-# HisseAI (AI-Powered Stock Market Analysis)
+<div align="center">
 
-HisseAI, borsa takip işlemlerini yapay zeka destekli tahminlerle birleştiren, kullanıcı dostu ve modern bir mobil uygulamadır. Gerçek zamanlı haber takibi, hisse senedi tahminleri ve güvenli kullanıcı yönetimi özellikleri ile yatırımcılara rehberlik etmeyi hedefler.
+# 📈 HisseAI
 
-## 🚀 Özellikler
+**Borsayı yapay zeka ile keşfet, portföyünü yönet, geleceği tahmin et.**
 
-- **Güvenli Kimlik Doğrulama**: Kullanıcı kayıt ve giriş işlemleri (Supabase üzerinden sağlanır).
-- **Gerçek Zamanlı Haberler**: Finans dünyasından en güncel haberler ve gelişmeler.
-- **Yapay Zeka Destekli Tahminler**: Seçili hisse senetleri için geleceğe yönelik yapay zeka analizleri ve fiyat tahminleri.
-- **Portföy ve Ana Ekran**: Kullanıcının hisselerini kolayca takip edebileceği modern ana ekran tasarımı.
-- **Özelleştirilebilir Ayarlar**: Kullanıcı profili ve uygulama içi ayar seçenekleri.
+Gerçek zamanlı piyasa haberleri, hisse senedi takibi ve yapay zeka destekli fiyat tahminlerini tek bir modern ekranda sunan; **yatırımcılara özel** ve **güvenli** bir mobil yol arkadaşı.
 
-## 🛠 Kullanılan Teknolojiler
+![React Native](https://img.shields.io/badge/React%20Native-0.76-61DAFB?logo=react&logoColor=black)
+![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?logo=supabase&logoColor=white)
+![Render](https://img.shields.io/badge/Render-Deployment-46E3B7?logo=render&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-8FAE8B)
 
-- **Frontend**: React Native (Cross-platform mobil uygulama)
-- **Backend & Veritabanı**: Supabase (PostgreSQL, Authentication)
-- **Dağıtım ve Sunucu**: Render
-- **Sürüm Kontrolü**: Git & GitHub
+</div>
 
-## 🔒 Proje Güvenliği ve Backend Mimarisi Hakkında Bilgilendirme
+---
+
+## 📌 Çözdüğü Problem
+
+Borsa takibi yapmak, karmaşık grafikler ve düzensiz haber akışları arasında kaybolmaya neden olabilir. Ayrıca, hisselerin gelecekteki yönelimlerini analiz etmek ciddi bir zaman ve finansal okuryazarlık gerektirir.
+
+**HisseAI yatırım danışmanlığı yapmaz** — ama kararlarını verirken sana veri odaklı ve yenilikçi bir perspektif sunar:
+
+- Anlık olarak piyasa haberlerini ve gelişmeleri takip etme
+- Portföyündeki hisseleri tek bir ekranda kolayca yönetme
+- **Yapay zeka modelleri** ile hisselerin gelecekteki olası fiyat hareketlerini tahmin etme
+- Karmaşadan uzak, modern ve anlaşılır bir arayüzle finansal verilere erişme
+
+> 💡 **İnovasyon:** Uygulamamız, yapay zeka destekli tahmin altyapısını kullanarak geleneksel borsa takibini bir adım öteye taşır. Veriler güvenli Supabase altyapısında anlık olarak işlenir.
+
+---
+
+## ✨ Özellikler
+
+### 📊 Ana Ekran — Portföy Takibi
+- Seçtiğin hisselerin anlık durumunu ve fiyatlarını görüntüle.
+- Modern grafikler ve renk kodlarıyla yükseliş/düşüş trendlerini hızlıca fark et.
+
+### 🤖 Yapay Zeka Tahmini — Geleceğe Bakış
+- Seçilen hisseler için yapay zeka destekli fiyat tahminleri ve analizler.
+- Geçmiş verilere dayalı algoritmik öngörüler.
+
+### 📰 Haberler — Gerçek Zamanlı Akış
+- Finans dünyasından ve piyasalardan en güncel gelişmeleri takip et.
+- Hisseler üzerinde etkisi olabilecek haberlere anında ulaş.
+
+### 👤 Profil & Ayarlar
+- Kullanıcıya özel hesap yönetimi (Kayıt Ol / Giriş Yap).
+- Güvenli Supabase kimlik doğrulaması.
+- Uygulama içi kişiselleştirme ve bildirim ayarları.
+
+### 🎨 Deneyim
+- Sezgisel, karmaşadan uzak ve modern kullanıcı arayüzü.
+- Mobil cihazlara optimize edilmiş akıcı geçişler ve bileşenler.
+
+---
+
+## 📸 Ekran Görüntüleri
+
+<div align="center">
+
+| Giriş Ekranı | Kayıt Ol Ekranı | Ana Ekran |
+|:---:|:---:|:---:|
+| <img src="screenshots/giris.jpg" width="230"/> | <img src="screenshots/kayitol.jpg" width="230"/> | <img src="screenshots/anaekran.jpg" width="230"/> |
+
+| Haberler Ekranı | Yapay Zeka Tahmin | Ayarlar Ekranı |
+|:---:|:---:|:---:|
+| <img src="screenshots/haberler.jpg" width="230"/> | <img src="screenshots/yz_tahmin.jpg" width="230"/> | <img src="screenshots/ayarlar.jpg" width="230"/> |
+
+</div>
+
+---
+
+## 🏗️ Altyapı ve Backend
 
 **Değerli Hocamızın Dikkatine,**
 
 Bu GitHub reposu, HisseAI projemizin **istemci (client/mobil)** tarafını içermektedir. Projemizin **backend, veritabanı (Supabase) ve sunucu konfigürasyon dosyaları**, içerdikleri hassas kimlik bilgileri, API anahtarları ve veritabanı bağlantı şifreleri sebebiyle siber güvenlik standartları gereği *public* (herkese açık) olarak paylaşılmamıştır. 
 
-Uygulamamızın veri tabanı mimarisi, kimlik doğrulama süreçleri ve sunucu dağıtım aşamaları ile ilgili detaylı ekran görüntüleri ve şemaları, arka plan işleyişini inceleyebilmeniz adına aşağıdaki "Altyapı ve Backend" bölümüne eklenmiştir.
+Uygulamamızın veri tabanı mimarisi, kimlik doğrulama süreçleri ve sunucu dağıtım aşamaları ile ilgili detaylı ekran görüntüleri ve şemaları aşağıda inceleyebilirsiniz:
 
-Anlayışınız için teşekkür eder, saygılarımızı sunarız.
-
-## 📱 Ekran Görüntüleri
-
-### Kullanıcı Arayüzü (Mobil Uygulama)
-
-| Giriş Ekranı | Kayıt Ol Ekranı | Ana Ekran |
-|:---:|:---:|:---:|
-| <img src="screenshots/giris.jpg" width="250" /> | <img src="screenshots/kayitol.jpg" width="250" /> | <img src="screenshots/anaekran.jpg" width="250" /> |
-
-| Haberler Ekranı | Yapay Zeka Tahmin | Ayarlar Ekranı |
-|:---:|:---:|:---:|
-| <img src="screenshots/haberler.jpg" width="250" /> | <img src="screenshots/yz_tahmin.jpg" width="250" /> | <img src="screenshots/ayarlar.jpg" width="250" /> |
-
-### Altyapı ve Backend
+<div align="center">
 
 **Supabase Veritabanı ve Yönetim**
 | Supabase Genel Bakış | Supabase Tabloları |
 |:---:|:---:|
-| ![Supabase](screenshots/supabase.png) | ![Supabase Tablo](screenshots/supabase_table.png) |
+| <img src="screenshots/supabase.png" width="400"/> | <img src="screenshots/supabase_table.png" width="400"/> |
 
 **Dağıtım ve Sürüm Kontrolü (Render & Git)**
 | Git Backend | Render Dağıtımı | Render Projesi |
 |:---:|:---:|:---:|
-| ![Git](screenshots/git_backend.png) | ![Render](screenshots/render.png) | ![Render Project](screenshots/render_project.png) |
+| <img src="screenshots/git_backend.png" width="250"/> | <img src="screenshots/render.png" width="250"/> | <img src="screenshots/render_project.png" width="250"/> |
+
+</div>
+
+---
 
 ## ⚙️ Kurulum ve Çalıştırma
 
 Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
-
-### Gereksinimler
-- Node.js (Güncel bir LTS sürümü)
-- React Native CLI veya Expo CLI (Proje yapısına göre)
-- Android Studio / Xcode (Simülatör için)
 
 ### Adımlar
 
@@ -71,8 +110,6 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleye
 2. **Bağımlılıkları Yükleyin**
    ```bash
    npm install
-   # veya
-   yarn install
    ```
 
 3. **Çevresel Değişkenleri Ayarlayın**
@@ -83,20 +120,10 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleye
    ```
 
 4. **Uygulamayı Başlatın**
-
-   *Android için:*
    ```bash
    npm run android
    # veya
-   yarn android
-   ```
-
-   *iOS için:*
-   ```bash
-   cd ios && pod install && cd ..
    npm run ios
-   # veya
-   yarn ios
    ```
 
 ---
