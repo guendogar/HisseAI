@@ -37,9 +37,16 @@ const StockCard: React.FC<StockCardProps> = memo(({ stock, onPress }) => {
           </Text>
         </View>
         <View style={styles.info}>
-          <Text style={[styles.symbol, { color: colors.text }]} numberOfLines={1}>
-            {stock.symbol}
-          </Text>
+          <View style={styles.symbolRow}>
+            <Text style={[styles.symbol, { color: colors.text }]} numberOfLines={1}>
+              {stock.symbol}
+            </Text>
+            {/* Canlı / Demo göstergesi */}
+            <View style={[
+              styles.liveDot,
+              { backgroundColor: stock.isLive ? '#22c55e' : '#f59e0b' }
+            ]} />
+          </View>
           <Text style={[styles.name, { color: colors.textSecondary }]} numberOfLines={1}>
             {stock.name}
           </Text>
@@ -85,6 +92,8 @@ const styles = StyleSheet.create({
   },
   logoText: { fontSize: FontSizes.sm, fontWeight: FontWeights.bold },
   info: { flex: 1 },
+  symbolRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  liveDot: { width: 7, height: 7, borderRadius: 4 },
   symbol: { fontSize: FontSizes.base, fontWeight: FontWeights.semibold },
   name: { fontSize: FontSizes.sm, marginTop: 2 },
   right: { alignItems: 'flex-end' },

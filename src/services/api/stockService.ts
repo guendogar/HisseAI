@@ -1,12 +1,14 @@
-// ─── Stock Service – Direkt Yahoo Finance API ─────────────────────────────────
-// Backend'e gerek yok. React Native'de CORS olmadığı için direkt çekiyoruz.
+// ─── Stock Service – newsService ile aynı yaklaşım ────────────────────────────
+// v1/finance/search ve v8/finance/chart endpointleri CORS'a takılmıyor.
+// newsService'in çalıştığı gibi bu da backend olmadan gerçek veri çeker.
 
 import { Stock, StockPrice, StockHistory } from '../../types';
 import { Market } from '../../constants';
 import { cache, CacheKeys, CacheTTL } from '../cache';
+import { MOCK_STOCKS, generateMockHistory } from './mockData';
 
-const YF_BASE = 'https://query1.finance.yahoo.com';
-const YF_BASE2 = 'https://query2.finance.yahoo.com';
+const YF = 'https://query1.finance.yahoo.com';
+const YF2 = 'https://query2.finance.yahoo.com';
 
 // ─── Sembol Listeleri ─────────────────────────────────────────────────────────
 
@@ -27,7 +29,7 @@ const MARKET_SYMBOLS: Record<string, string[]> = {
   ],
 };
 
-// ─── Yardımcı Fonksiyonlar ────────────────────────────────────────────────────
+// ─── Yardımcılar ──────────────────────────────────────────────────────────────
 
 function marketOf(symbol: string): Market {
   if (symbol.endsWith('.IS')) return 'BIST';
@@ -36,58 +38,92 @@ function marketOf(symbol: string): Market {
   return 'NASDAQ';
 }
 
-function mapPrice(q: any): StockPrice {
+// chart API meta objesinden Stock oluştur
+function stockFromChart(symbol: string, meta: any): Stock {
+  const price: StockPrice = {
+    current:        meta.regularMarketPrice         ?? meta.chartPreviousClose ?? 0,
+    open:           meta.regularMarketOpen          ?? meta.chartPreviousClose ?? 0,
+    high:           meta.regularMarketDayHigh       ?? 0,
+    low:            meta.regularMarketDayLow        ?? 0,
+    close:          meta.regularMarketPrice         ?? 0,
+    previousClose:  meta.chartPreviousClose         ?? meta.previousClose ?? 0,
+    changeAmount:   meta.regularMarketPrice != null && meta.chartPreviousClose != null
+                      ? meta.regularMarketPrice - meta.chartPreviousClose : 0,
+    changePercent:  meta.regularMarketPrice != null && meta.chartPreviousClose != null && meta.chartPreviousClose !== 0
+                      ? ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100 : 0,
+    volume:         meta.regularMarketVolume        ?? 0,
+    avgVolume:      meta.averageDailyVolume3Month   ?? 0,
+    marketCap:      0,
+    timestamp:      meta.regularMarketTime ? meta.regularMarketTime * 1000 : Date.now(),
+  };
   return {
-    current: q.regularMarketPrice ?? 0,
-    open: q.regularMarketOpen ?? 0,
-    high: q.regularMarketDayHigh ?? 0,
-    low: q.regularMarketDayLow ?? 0,
-    close: q.regularMarketPrice ?? 0,
-    previousClose: q.regularMarketPreviousClose ?? 0,
-    changeAmount: q.regularMarketChange ?? 0,
-    changePercent: q.regularMarketChangePercent ?? 0,
-    volume: q.regularMarketVolume ?? 0,
-    avgVolume: q.averageDailyVolume3Month ?? 0,
-    marketCap: q.marketCap ?? 0,
-    timestamp: q.regularMarketTime ? q.regularMarketTime * 1000 : Date.now(),
+    id:       symbol,
+    symbol,
+    name:     meta.longName || meta.shortName || symbol,
+    market:   marketOf(symbol),
+    currency: meta.currency || (symbol.endsWith('.IS') ? 'TRY' : 'USD'),
+    sector:   meta.sector,
+    price,
+    isLive:   true,
   };
 }
 
-function mapStock(q: any): Stock {
-  return {
-    id: q.symbol,
-    symbol: q.symbol,
-    name: q.shortName || q.longName || q.symbol,
-    market: marketOf(q.symbol),
-    currency: q.currency || (q.symbol.endsWith('.IS') ? 'TRY' : 'USD'),
-    sector: q.sector,
-    price: mapPrice(q),
-  };
+// Mock fallback
+function mockFallback(symbols: string[]): Stock[] {
+  const upper = symbols.map(s =>
+    s.replace('.IS','').replace('.DE','').replace('.PA','').replace('.L','').toUpperCase()
+  );
+  return MOCK_STOCKS.filter(s => upper.includes(s.symbol.toUpperCase()));
 }
+
+// ─── Tek sembol için chart API (newsService gibi direkt fetch) ────────────────
+// /v8/finance/chart/ CORS'a takılmıyor — newsService'in kullandığı host üzerinden çalışıyor
+
+async function fetchChartQuote(symbol: string): Promise<Stock | null> {
+  const urls = [
+    `${YF}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`,
+    `${YF2}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`,
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'application/json',
+        },
+      });
+      if (!res.ok) continue;
+      const json = await res.json();
+      const meta = json?.chart?.result?.[0]?.meta;
+      if (!meta || !meta.regularMarketPrice) continue;
+      return stockFromChart(symbol, meta);
+    } catch {
+      // diğerini dene
+    }
+  }
+  return null;
+}
+
+// ─── Çoklu sembol – newsService gibi paralel çekiş ───────────────────────────
 
 async function fetchQuotes(symbols: string[]): Promise<Stock[]> {
   if (!symbols.length) return [];
-  try {
-    const url = `${YF_BASE}/v8/finance/quote?symbols=${symbols.join(',')}&lang=tr&region=TR`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    });
-    if (!res.ok) throw new Error('Yahoo Finance yanıt vermedi');
-    const json = await res.json();
-    const quotes: any[] = json?.quoteResponse?.result ?? [];
-    return quotes.map(mapStock);
-  } catch {
-    // İlk sunucu başarısızsa ikincisini dene
-    try {
-      const url2 = `${YF_BASE2}/v8/finance/quote?symbols=${symbols.join(',')}&lang=tr&region=TR`;
-      const res = await fetch(url2, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      const json = await res.json();
-      const quotes: any[] = json?.quoteResponse?.result ?? [];
-      return quotes.map(mapStock);
-    } catch {
-      return [];
+
+  // Paralel olarak hepsini çek (newsService yaklaşımı)
+  const results = await Promise.allSettled(symbols.map(s => fetchChartQuote(s)));
+
+  const stocks: Stock[] = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled' && r.value) {
+      stocks.push(r.value);
     }
-  }
+  });
+
+  if (stocks.length > 0) return stocks;
+
+  // Hiç gelmezse mock
+  console.warn('[StockService] Chart API ulaşılamıyor, mock verisi kullanılıyor.');
+  return mockFallback(symbols);
 }
 
 // ─── Public Service ───────────────────────────────────────────────────────────
@@ -99,8 +135,9 @@ export const stockService = {
     if (cached) return cached;
     const all = Object.values(MARKET_SYMBOLS).flat();
     const data = await fetchQuotes(all);
-    cache.set(key, data, CacheTTL.history);
-    return data;
+    const result = data.length > 0 ? data : MOCK_STOCKS;
+    cache.set(key, result, CacheTTL.history);
+    return result;
   },
 
   async getStocksByMarket(market: Market): Promise<Stock[]> {
@@ -109,16 +146,17 @@ export const stockService = {
     if (cached) return cached;
     const symbols = MARKET_SYMBOLS[market] ?? [];
     const data = await fetchQuotes(symbols);
-    cache.set(key, data, CacheTTL.prices);
-    return data;
+    const result = data.length > 0 ? data : mockFallback(symbols);
+    cache.set(key, result, CacheTTL.prices);
+    return result;
   },
 
   async searchStocks(query: string, market?: Market): Promise<Stock[]> {
     try {
-      const url = `${YF_BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15&newsCount=0&lang=tr`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const url = `${YF}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15&newsCount=0&lang=en-US`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
       const json = await res.json();
-      const hits: any[] = json?.finance?.result?.[0]?.quotes ?? json?.quotes ?? [];
+      const hits: any[] = json?.quotes ?? json?.finance?.result?.[0]?.quotes ?? [];
       const symbols = hits
         .filter((h: any) => h.quoteType === 'EQUITY')
         .map((h: any) => h.symbol)
@@ -134,7 +172,7 @@ export const stockService = {
   async getStockById(id: string): Promise<Stock> {
     const cached = cache.get<Stock>(`stock:${id}`);
     if (cached) return cached;
-    const [data] = await fetchQuotes([id]);
+    const data = await fetchChartQuote(id);
     if (!data) throw new Error(`Hisse bulunamadı: ${id}`);
     cache.set(`stock:${id}`, data, CacheTTL.prices);
     return data;
@@ -144,7 +182,7 @@ export const stockService = {
     const key = CacheKeys.stockPrice(symbol);
     const cached = cache.get<StockPrice>(key);
     if (cached) return cached;
-    const [stock] = await fetchQuotes([symbol]);
+    const stock = await fetchChartQuote(symbol);
     if (!stock?.price) throw new Error(`Fiyat bulunamadı: ${symbol}`);
     cache.set(key, stock.price, CacheTTL.prices);
     return stock.price;
@@ -172,34 +210,53 @@ export const stockService = {
     const intervalMap: Record<string, string> = {
       '1D': '5m', '1W': '15m', '1M': '1d', '1Y': '1d', 'ALL': '1wk',
     };
+    const daysMap: Record<string, number> = {
+      '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'ALL': 1825,
+    };
 
     const range = rangeMap[period] ?? '1mo';
     const yfInterval = intervalMap[period] ?? '1d';
 
-    try {
-      const url = `${YF_BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${yfInterval}&range=${range}`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      const json = await res.json();
-      const chart = json?.chart?.result?.[0];
-      if (!chart) return [];
+    const urls = [
+      `${YF}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${yfInterval}&range=${range}`,
+      `${YF2}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${yfInterval}&range=${range}`,
+    ];
 
-      const timestamps: number[] = chart.timestamp ?? [];
-      const ohlcv = chart.indicators?.quote?.[0] ?? {};
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+        if (!res.ok) continue;
+        const json = await res.json();
+        const chart = json?.chart?.result?.[0];
+        if (!chart) continue;
 
-      const history: StockHistory[] = timestamps.map((ts: number, i: number) => ({
-        date: new Date(ts * 1000).toISOString(),
-        open: ohlcv.open?.[i] ?? 0,
-        high: ohlcv.high?.[i] ?? 0,
-        low: ohlcv.low?.[i] ?? 0,
-        close: ohlcv.close?.[i] ?? 0,
-        volume: ohlcv.volume?.[i] ?? 0,
-      })).filter(h => h.close > 0);
+        const timestamps: number[] = chart.timestamp ?? [];
+        const ohlcv = chart.indicators?.quote?.[0] ?? {};
 
-      cache.set(key, history, CacheTTL.history);
-      return history;
-    } catch {
-      return [];
+        const history: StockHistory[] = timestamps.map((ts: number, i: number) => ({
+          date:   new Date(ts * 1000).toISOString(),
+          open:   ohlcv.open?.[i]   ?? 0,
+          high:   ohlcv.high?.[i]   ?? 0,
+          low:    ohlcv.low?.[i]    ?? 0,
+          close:  ohlcv.close?.[i]  ?? 0,
+          volume: ohlcv.volume?.[i] ?? 0,
+        })).filter(h => h.close > 0);
+
+        if (history.length > 0) {
+          cache.set(key, history, CacheTTL.history);
+          return history;
+        }
+      } catch {
+        // diğer URL'yi dene
+      }
     }
+
+    // Gerçek veri gelmedi → mock geçmiş üret
+    const mockStock = MOCK_STOCKS.find(s => s.symbol === symbol || s.symbol === symbol.replace('.IS', ''));
+    const basePrice = mockStock?.price?.current ?? 100;
+    const mockHistory = generateMockHistory(basePrice, daysMap[period] ?? 30);
+    cache.set(key, mockHistory, CacheTTL.history);
+    return mockHistory;
   },
 
   async getTopGainers(market?: Market, limit = 10): Promise<Stock[]> {

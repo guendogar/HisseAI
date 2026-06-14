@@ -39,6 +39,7 @@ export interface Stock {
   weeklyChange?: number;
   monthlyChange?: number;
   isFavorite?: boolean;
+  isLive?: boolean; // true = Yahoo Finance'ten gerçek fiyat, false/undefined = mock
 }
 
 // ─── News ────────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from './useStore';
 import { setStocks, setLoading, setError } from '../store/slices/stocksSlice';
 import { stockService } from '../services/api/stockService';
@@ -8,10 +8,15 @@ import { handleError } from '../utils';
 
 export const useStocks = (market: Market) => {
   const dispatch = useAppDispatch();
-  const stocks = useAppSelector(state => {
-    const ids = state.stocks.lists[market] ?? [];
-    return ids.map(id => state.stocks.items[id]).filter(Boolean) as Stock[];
-  });
+
+  // Selector'ı iki adıma böl → her render'da yeni array oluşturma uyarısını önle
+  const ids = useAppSelector(s => s.stocks.lists[market] ?? []);
+  const items = useAppSelector(s => s.stocks.items);
+  const stocks = useMemo(
+    () => ids.map(id => items[id]).filter(Boolean) as Stock[],
+    [ids, items],
+  );
+
   const loading = useAppSelector(s => s.stocks.loading);
   const error = useAppSelector(s => s.stocks.error);
 
